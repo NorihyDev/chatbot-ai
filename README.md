@@ -1,6 +1,6 @@
 # Nova AI
 
-A thoughtful AI chatbot built with **TypeScript, Next.js, React, and Tailwind CSS**. Nova combines a ChatGPT-style conversation layout with a warm cream-and-sage visual identity, real OpenAI streaming, and a private personal workspace.
+A personal chat workspace built with **TypeScript, Next.js, React, and Tailwind CSS**. Nova pairs a charcoal sidebar, warm paper surfaces, and terracotta accents with real OpenAI streaming, readable conversations, and a composer that comes first.
 
 ![Nova desktop interface](docs/nova-desktop.png)
 
@@ -49,6 +49,7 @@ Never commit `.env.local`, paste API keys into the chat, or expose keys with a `
 - Supports stop, retry, and regenerate; interrupted answers are excluded from follow-up context.
 - Saves up to 80 conversations in this browser, with search, rename, confirmed deletion, and Markdown export.
 - Includes responsive mobile navigation, light/dark themes, starter prompts, keyboard shortcuts, and reduced-motion support.
+- Provides a skip link, visible focus indicators, keyboard-contained dialogs and mobile navigation, screen-reader response status, and touch-friendly primary controls.
 - Keeps API credentials on the server and protects production access with a password and signed, expiring HTTP-only session cookies.
 - Handles provider errors, missing configuration, timeouts, unavailable storage, and rate limits.
 
@@ -91,7 +92,9 @@ npm run test:e2e          # Desktop and mobile Chromium tests
 npm audit
 ```
 
-Tests mock the provider boundary and do not require a real key or make paid API calls. Verify actual OpenAI connectivity manually with a configured key by sending a message and a follow-up, and stopping a streamed response. A configured key indicator means a key is present; it does not verify its validity or available quota.
+Tests mock the provider boundary and do not require a real key or make paid API calls. Browser tests include axe checks against applicable WCAG 2.2 A/AA rules in light/dark themes and dialogs, keyboard navigation, and reflow at 320 pixels. Automated checks are one part of accessibility verification, not a certification of complete WCAG conformance. See the [W3C accessibility reference](https://www.w3.org/WAI/WCAG22/quickref/).
+
+Verify actual OpenAI connectivity manually with a configured key by sending a message and a follow-up, and stopping a streamed response. A configured key indicator means a key is present; it does not verify its validity or available quota.
 
 ## Deploy
 
