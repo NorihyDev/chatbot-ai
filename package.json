@@ -2,7 +2,9 @@
   "name": "chatbot-ai",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,28 +13,33 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "npm run lint && npm run typecheck && npm test"
+    "check": "npm run lint && npm run typecheck && npm test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "openai": "latest",
-    "zod": "latest",
-    "lucide-react": "latest",
-    "react-markdown": "latest",
-    "remark-gfm": "latest"
+    "lucide-react": "1.54.0",
+    "next": "16.4.0",
+    "openai": "7.31.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
+    "zod": "4.6.5"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "latest",
-    "tailwindcss": "latest",
-    "typescript": "latest",
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "eslint": "latest",
-    "eslint-config-next": "latest",
-    "vitest": "latest",
-    "@playwright/test": "latest"
-  }
+    "@playwright/test": "1.64.0",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "10.12.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "prettier": "3.9.9",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1",
+    "vitest": "5.0.3"
+  },
+  "type": "module"
 }
