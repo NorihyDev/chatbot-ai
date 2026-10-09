@@ -45,10 +45,21 @@ export async function readJson(
 
 export function isSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  return (
-    (!origin || origin === new URL(request.url).origin) &&
-    request.headers.get("sec-fetch-site") !== "cross-site"
-  );
+  if (request.headers.get("sec-fetch-site") === "cross-site") return false;
+  if (!origin) return true;
+  try {
+    const browserOrigin = new URL(origin);
+    // Next.js may use an internal localhost URL. Browsers cannot override Host;
+    // the reverse proxy must preserve the original host for this comparison.
+    const host = request.headers.get("host") || new URL(request.url).host;
+    return (
+      ["http:", "https:"].includes(browserOrigin.protocol) &&
+      origin === browserOrigin.origin &&
+      browserOrigin.host === host.toLowerCase()
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function jsonError(message: string, status: number) {

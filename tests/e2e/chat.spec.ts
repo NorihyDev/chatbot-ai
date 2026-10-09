@@ -97,7 +97,7 @@ test("reports a provider error and retries the same user turn", async ({
   await page.goto("/");
   await page.getByRole("textbox", { name: "Message Nova" }).fill("Hello");
   await page.getByRole("button", { name: "Send message", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("Quota reached");
+  await expect(page.locator(".error-banner")).toContainText("Quota reached");
   await page.getByRole("button", { name: "Retry response" }).click();
   await expect(page.locator(".markdown")).toHaveText("Recovered");
   await expect(page.locator(".user-message")).toHaveCount(1);
@@ -146,4 +146,59 @@ test("missing key is clearly explained and sending is disabled", async ({
   await expect(
     page.getByRole("button", { name: "Send message", exact: true }),
   ).toBeDisabled();
+});
+
+test("stops an in-flight response and excludes it from follow-up context", async ({
+  page,
+}) => {
+  let calls = 0;
+  let followUp: unknown;
+  await page.route("**/api/chat", async (route) => {
+    calls++;
+    if (calls === 1) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await route
+        .fulfill({
+          contentType: "application/x-ndjson",
+          body: '{"type":"delta","text":"Late reply"}\n{"type":"done"}\n',
+        })
+        .catch(() => {});
+    } else {
+      followUp = route.request().postDataJSON();
+      await route.fulfill({
+        contentType: "application/x-ndjson",
+        body: '{"type":"delta","text":"Fresh reply"}\n{"type":"done"}\n',
+      });
+    }
+  });
+  await page.goto("/");
+  await page
+    .getByRole("textbox", { name: "Message Nova" })
+    .fill("First question");
+  await page.getByRole("button", { name: "Send message", exact: true }).click();
+  await page.getByRole("button", { name: "Stop generating" }).click();
+  await expect(
+    page.getByText("Response stopped.", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("textbox", { name: "Message Nova" })
+    .fill("Next question");
+  await page.getByRole("button", { name: "Send message", exact: true }).click();
+  await expect(page.locator(".markdown")).toHaveText("Fresh reply");
+  expect(followUp).toEqual({
+    messages: [{ role: "user", content: "Next question" }],
+  });
+});
+
+test("settings trap keyboard focus and close with Escape", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Nova AI", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Your workspace" });
+  await expect(dialog).toBeVisible();
+  for (let i = 0; i < 8; i++) await page.keyboard.press("Tab");
+  expect(
+    await dialog.evaluate((el) => el.contains(document.activeElement)),
+  ).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
 });

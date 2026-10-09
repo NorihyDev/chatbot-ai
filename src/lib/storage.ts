@@ -41,3 +41,9 @@ export function newConversation(): Conversation {
     messages: [],
   };
 }
+export function serializeConversations(chats: Conversation[]): string {
+  const raw = JSON.stringify(schema.parse(chats));
+  if (raw.length > 4_000_000)
+    throw new Error("Chat history exceeds the browser storage budget.");
+  return raw;
+}

@@ -24,6 +24,27 @@ export function Modal({
       className={`settings-dialog ${className}`}
       aria-labelledby={labelId}
       onCancel={onClose}
+      onKeyDown={(event) => {
+        if (event.key !== "Tab") return;
+        const elements = Array.from(
+          event.currentTarget.querySelectorAll<HTMLElement>(
+            'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])',
+          ),
+        ).filter((el) => el.offsetParent !== null);
+        const first = elements[0];
+        const last = elements.at(-1);
+        if (!first || !last) {
+          event.preventDefault();
+          return;
+        }
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }}
       onClick={(event) => {
         if (event.target !== ref.current) return;
         const bounds = event.currentTarget.getBoundingClientRect();

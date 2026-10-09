@@ -47,6 +47,7 @@ import {
   MAX_CONVERSATIONS,
   newConversation,
   parseConversations,
+  serializeConversations,
   STORAGE_KEY,
   THEME_KEY,
 } from "@/lib/storage";
@@ -202,13 +203,13 @@ export default function ChatApp() {
   useEffect(() => {
     if (!state.loaded || streaming) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.chats));
+      localStorage.setItem(STORAGE_KEY, serializeConversations(state.chats));
     } catch {
       queueMicrotask(() => setStorageError(true));
     }
   }, [state.chats, state.loaded, streaming]);
   useEffect(() => {
-    if (atBottom)
+    if (atBottom && messages.length > 0)
       scrollArea.current?.scrollTo({
         top: scrollArea.current.scrollHeight,
         behavior: streaming ? "instant" : "smooth",
@@ -259,7 +260,14 @@ export default function ChatApp() {
     }
   }
   async function send(text: string, retry = false) {
-    if (inFlight.current || !text.trim() || !state.loaded) return;
+    if (
+      inFlight.current ||
+      !text.trim() ||
+      !state.loaded ||
+      !config?.authenticated ||
+      !config.ready
+    )
+      return;
     if (text.trim().length > MAX_MESSAGE_LENGTH) {
       setError("Please keep your message under 8,000 characters.");
       return;

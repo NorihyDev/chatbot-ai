@@ -39,6 +39,29 @@ describe("workspace authentication", () => {
   });
 });
 describe("HTTP boundaries", () => {
+  it("compares the browser host when Next uses an internal URL", () => {
+    expect(
+      isSameOrigin(
+        new Request("http://localhost:3107/api/chat", {
+          headers: { origin: "https://nova.example", host: "nova.example" },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isSameOrigin(
+        new Request("http://localhost:3107/api/chat", {
+          headers: { origin: "https://evil.example", host: "nova.example" },
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      isSameOrigin(
+        new Request("http://localhost:3107/api/chat", {
+          headers: { origin: "null", host: "nova.example" },
+        }),
+      ),
+    ).toBe(false);
+  });
   it("rejects oversized bodies without trusting Content-Length", async () => {
     const req = new Request("http://localhost/api/chat", {
       method: "POST",
