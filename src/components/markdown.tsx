@@ -36,29 +36,22 @@ export function CopyButton({
     </button>
   );
 }
-function Code({
-  children,
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"code">) {
+function Code({ children, className }: ComponentPropsWithoutRef<"code">) {
   const language = /language-(\w+)/.exec(className || "")?.[1];
   const text = String(children).replace(/\n$/, "");
   if (!language && !text.includes("\n"))
-    return (
-      <code className={className} {...props}>
-        {children}
-      </code>
-    );
+    return <code className={className}>{children}</code>;
   return (
     <div className="code-block">
       <div className="code-toolbar">
         <span>{language || "code"}</span>
         <CopyButton text={text} label="Copy code" />
       </div>
-      <pre>
-        <code className={className} {...props}>
-          {children}
-        </code>
+      <pre
+        tabIndex={0}
+        aria-label={language ? `${language} code` : "Code block"}
+      >
+        <code className={className}>{children}</code>
       </pre>
     </div>
   );
@@ -73,14 +66,24 @@ export function Markdown({ content }: { content: string }) {
           pre: ({ children }) => (
             <div className="pre-container">{children}</div>
           ),
-          a: ({ children, ...props }) => (
-            <a {...props} target="_blank" rel="noopener noreferrer">
+          a: ({ children, href, title }) => (
+            <a
+              href={href}
+              title={title}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {children}
             </a>
           ),
-          table: ({ children, ...props }) => (
-            <div className="table-scroll">
-              <table {...props}>{children}</table>
+          table: ({ children }) => (
+            <div
+              className="table-scroll"
+              tabIndex={0}
+              role="region"
+              aria-label="Response table"
+            >
+              <table>{children}</table>
             </div>
           ),
           img: () => <span>[Image omitted]</span>,

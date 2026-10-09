@@ -643,6 +643,9 @@ export default function ChatApp() {
                 </div>
               ) : (
                 <div className="messages-container">
+                  <h1 className="sr-only">
+                    {activeChat?.title || "Conversation"}
+                  </h1>
                   <div className="conversation-heading">
                     {renaming ? (
                       <form

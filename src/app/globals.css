@@ -30,7 +30,8 @@ textarea {
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+[tabindex]:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 4px;
 }
@@ -899,6 +900,9 @@ textarea:focus-visible {
   background: transparent;
   padding: 0;
   font-size: 13px;
+}
+.code-block pre:focus-visible {
+  outline-offset: -3px;
 }
 .table-scroll {
   overflow-x: auto;

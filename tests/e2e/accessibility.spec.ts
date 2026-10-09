@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { mkdir } from "node:fs/promises";
 
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/session", (route) =>
@@ -87,4 +88,48 @@ test("keyboard access and reflow work on narrow screens", async ({
     .boundingBox();
   expect(send?.width).toBeGreaterThanOrEqual(44);
   expect(send?.height).toBeGreaterThanOrEqual(44);
+});
+
+test("conversation text, code, and tables remain accessible in both themes", async ({
+  page,
+}, testInfo) => {
+  await page.route("**/api/chat", (route) =>
+    route.fulfill({
+      contentType: "application/x-ndjson",
+      body:
+        JSON.stringify({
+          type: "delta",
+          text: "## A useful starting point\n\nBreak the work into three small steps.\n\n1. Define your goal.\n2. Build a small version.\n3. Try it with someone.\n\n```typescript\nconst project = { name: 'A fresh idea', ready: true };\n```\n\n| Stage | Outcome |\n| --- | --- |\n| Plan | A clear brief |\n| Build | Something to try |",
+        }) + '\n{"type":"done"}\n',
+    }),
+  );
+  await page.goto("/");
+  await page
+    .getByRole("textbox", { name: "Message Nova" })
+    .fill("Help me plan a project");
+  await page.getByRole("button", { name: "Send message", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Regenerate response" }),
+  ).toBeVisible();
+  await mkdir("test-results", { recursive: true });
+  for (const theme of ["light", "dark"]) {
+    if (theme === "dark")
+      await page.getByRole("button", { name: "Switch to dark theme" }).click();
+    const result = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(result.violations).toEqual([]);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    await page
+      .locator(".conversation-scroll")
+      .evaluate((el) => el.scrollTo({ top: 0 }));
+    await page.screenshot({
+      path: `test-results/conversation-${testInfo.project.name}-${theme}.png`,
+      fullPage: true,
+    });
+  }
 });
