@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Nova — A little clarity, a lot of possibility",
+  title: "Nova — Your workspace",
   description:
-    "Your thoughtful AI companion for writing, coding, learning, and everyday ideas.",
+    "A personal workspace for conversations, drafts, code, and ideas.",
 };
 
 export default function RootLayout({

@@ -30,7 +30,6 @@ import {
   Search,
   Settings2,
   ShieldCheck,
-  Sparkles,
   Square,
   Sun,
   Trash2,
@@ -53,6 +52,8 @@ import {
 } from "@/lib/storage";
 import { CopyButton, Markdown } from "./markdown";
 import { Modal } from "./modal";
+import { trapFocus } from "@/lib/focus";
+import { useMobile } from "@/lib/use-mobile";
 
 type Config = {
   authenticated: boolean;
@@ -96,12 +97,11 @@ function NovaMark({ size = 24 }: { size?: number }) {
       aria-hidden="true"
     >
       <path
-        d="M16 2c1.7 9.3 4.7 12.3 14 14-9.3 1.7-12.3 4.7-14 14C14.3 20.7 11.3 17.7 2 16 11.3 14.3 14.3 11.3 16 2Z"
-        fill="currentColor"
-      />
-      <path
-        d="M25 1c.5 2.8 1.5 3.8 4.3 4.3C26.5 5.8 25.5 6.8 25 9.6c-.5-2.8-1.5-3.8-4.3-4.3C23.5 4.8 24.5 3.8 25 1Z"
-        fill="currentColor"
+        d="M8 24V8l16 16V8"
+        stroke="currentColor"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -109,32 +109,32 @@ function NovaMark({ size = 24 }: { size?: number }) {
 const suggestions = [
   {
     icon: PenLine,
-    title: "Find the right words",
-    description: "A first draft, a fresh perspective",
+    title: "Write a first draft",
+    description: "Find the words you need",
     prompt:
       "Help me write a thoughtful, professional email. Ask me what it's about first.",
     color: "peach",
   },
   {
     icon: Code2,
-    title: "Build something great",
-    description: "Untangle code. Bring ideas to life.",
+    title: "Work through code",
+    description: "Build, debug, understand",
     prompt:
       "Be my coding partner. Ask me what I want to build and help me plan it step by step.",
     color: "sage",
   },
   {
     icon: Lightbulb,
-    title: "Follow your curiosity",
-    description: "Big questions, simple explanations",
+    title: "Learn something new",
+    description: "Make a tricky topic click",
     prompt:
       "Teach me something fascinating about a topic of my choice. Ask me what I'm curious about.",
     color: "yellow",
   },
   {
     icon: BookOpen,
-    title: "Make room for ideas",
-    description: "Brainstorm your next possibility",
+    title: "Explore an idea",
+    description: "Turn a thought into a plan",
     prompt:
       "Help me brainstorm fresh ideas. Start by asking me about my goal and constraints.",
     color: "lavender",
@@ -154,6 +154,8 @@ export default function ChatApp() {
   const [error, setError] = useState<string | null>(null);
   const [storageError, setStorageError] = useState(false);
   const [dark, setDark] = useState(false);
+  const [mac, setMac] = useState(false);
+  const mobile = useMobile();
   const [sidebar, setSidebar] = useState(false);
   const [settings, setSettings] = useState(false);
   const [password, setPassword] = useState("");
@@ -180,6 +182,7 @@ export default function ChatApp() {
     }
   }, []);
   useEffect(() => {
+    queueMicrotask(() => setMac(/Mac|iPhone|iPad/.test(navigator.userAgent)));
     try {
       dispatch({
         type: "load",
@@ -200,6 +203,14 @@ export default function ChatApp() {
     void loadConfig();
     return () => abortController.current?.abort();
   }, [loadConfig]);
+  useEffect(() => {
+    if (!mobile || !sidebar) return;
+    const previous = document.activeElement as HTMLElement | null;
+    searchInput.current?.focus();
+    return () => {
+      if (previous?.isConnected) previous.focus();
+    };
+  }, [mobile, sidebar]);
   useEffect(() => {
     if (!state.loaded || streaming) return;
     try {
@@ -400,9 +411,14 @@ export default function ChatApp() {
 
   return (
     <div className={`app flex h-dvh font-sans ${dark ? "dark-theme" : ""}`}>
+      <a className="skip-link" href="#main-workspace">
+        Skip to conversation
+      </a>
       {sidebar && (
         <button
           className="sidebar-scrim"
+          tabIndex={-1}
+          aria-hidden="true"
           aria-label="Close navigation"
           onClick={() => setSidebar(false)}
         />
@@ -410,13 +426,21 @@ export default function ChatApp() {
       <aside
         className={`sidebar ${sidebar ? "sidebar-open" : ""}`}
         aria-label="Chat navigation"
+        id="chat-navigation"
+        role={mobile && sidebar ? "dialog" : undefined}
+        aria-modal={mobile && sidebar ? true : undefined}
+        aria-hidden={mobile && !sidebar ? true : undefined}
+        inert={mobile && !sidebar}
+        onKeyDown={(event) => {
+          if (mobile && sidebar) trapFocus(event);
+        }}
       >
         <div className="sidebar-brand">
           <span className="brand-mark">
             <NovaMark />
           </span>
           <span className="brand-name">
-            nova<span className="brand-dot">.</span>
+            nova<span className="brand-caption">A PERSONAL WORKSPACE</span>
           </span>
           <button
             className="icon-button sidebar-close"
@@ -430,7 +454,9 @@ export default function ChatApp() {
         <button className="new-chat" onClick={startNew} disabled={streaming}>
           <Plus size={18} />
           <span>New conversation</span>
-          <span className="key-hint">⌘ ⇧ O</span>
+          <span className="key-hint" aria-hidden="true">
+            {mac ? "⌘" : "Ctrl"} ⇧ O
+          </span>
         </button>
         <label className="search-box">
           <Search size={16} />
@@ -441,21 +467,21 @@ export default function ChatApp() {
             placeholder="Search your chats"
             aria-label="Search conversations"
           />
-          <kbd>⌘ K</kbd>
+          <kbd aria-hidden="true">{mac ? "⌘" : "Ctrl"} K</kbd>
         </label>
         <div className="history-heading">
-          <span>YOUR CONVERSATIONS</span>
+          <span>RECENT CONVERSATIONS</span>
           <span>{state.chats.length}</span>
         </div>
-        <nav className="chat-history">
+        <nav className="chat-history" aria-label="Conversations">
           {!filtered.length && (
             <div className="empty-history">
               <MessageSquare size={23} />
-              <p>{search ? "No conversations found" : "A fresh start."}</p>
+              <p>{search ? "No results" : "Nothing here. Yet."}</p>
               <span>
                 {search
                   ? "Try another search."
-                  : "Your conversations will appear here."}
+                  : "Start a conversation and make this space yours."}
               </span>
             </div>
           )}
@@ -476,6 +502,7 @@ export default function ChatApp() {
                 }}
                 disabled={streaming}
                 title={chat.title}
+                aria-current={state.active === chat.id ? "page" : undefined}
               >
                 <MessageSquare size={15} />
                 <span>{chat.title}</span>
@@ -496,9 +523,9 @@ export default function ChatApp() {
           <div className="local-note">
             <ShieldCheck size={16} />
             <span>
-              A space for your thoughts.
+              Saved on this device
               <br />
-              <small>History saved on this browser.</small>
+              <small>Only in this browser.</small>
             </span>
           </div>
           <button className="profile-button" onClick={() => setSettings(true)}>
@@ -510,24 +537,35 @@ export default function ChatApp() {
           </button>
         </div>
       </aside>
-      <div className="main-panel">
+      <main
+        id="main-workspace"
+        tabIndex={-1}
+        inert={mobile && sidebar}
+        className={`main-panel ${!messages.length && (!config || config.authenticated) ? "welcome-view" : ""}`}
+      >
         <header className="topbar">
           <div className="topbar-left">
             <button
               className="icon-button mobile-menu"
               aria-label="Open navigation"
+              aria-expanded={sidebar}
+              aria-controls="chat-navigation"
               onClick={() => setSidebar(true)}
             >
               <Menu size={20} />
             </button>
             <span className="topbar-title">
-              {activeChat ? "Conversation" : "Your everyday AI companion"}
+              <span>Workspace</span>
+              <span className="breadcrumb-divider" aria-hidden="true">
+                /
+              </span>
+              <span>{activeChat ? "Conversation" : "New conversation"}</span>
             </span>
           </div>
           <div className="topbar-right">
             <span className="private-badge">
               <ShieldCheck size={13} />
-              Personal workspace
+              Saved on this device
             </span>
             <button
               className="icon-button"
@@ -590,47 +628,18 @@ export default function ChatApp() {
               {!messages.length ? (
                 <div className="welcome">
                   <div className="welcome-kicker">
-                    <span /> A LITTLE CLARITY. A LOT OF POSSIBILITY.
-                  </div>
-                  <div className="welcome-symbol">
-                    <NovaMark size={43} />
+                    <span className="welcome-line" /> YOUR SPACE TO THINK
                   </div>
                   <h1>
-                    Where shall we
+                    What are we
                     <br />
-                    <span>take your mind today?</span>
+                    <span>working on today?</span>
                   </h1>
                   <p className="welcome-description">
-                    Big ideas, small questions, and everything in between.
-                    <br className="desktop-break" /> Think it through with Nova.
+                    A question, a rough draft, an idea you can’t quite put into
+                    words.
+                    <br className="desktop-break" /> Start wherever you are.
                   </p>
-                  <div className="suggestions">
-                    {suggestions.map(({ icon: Icon, ...item }) => (
-                      <button
-                        key={item.title}
-                        className="suggestion-card"
-                        onClick={() => {
-                          setDraft(item.prompt);
-                          textarea.current?.focus();
-                        }}
-                      >
-                        <div className="suggestion-top">
-                          <span className={`suggestion-icon ${item.color}`}>
-                            <Icon size={18} />
-                          </span>
-                          <ArrowUpRight size={15} />
-                        </div>
-                        <strong>{item.title}</strong>
-                        <span className="suggestion-description">
-                          {item.description}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="welcome-footnote">
-                    <Sparkles size={13} />
-                    <span>A thoughtful partner for whatever comes next.</span>
-                  </div>
                 </div>
               ) : (
                 <div className="messages-container">
@@ -696,7 +705,7 @@ export default function ChatApp() {
                         </span>
                         <div className="assistant-content">
                           <div className="assistant-label">
-                            Nova<span>Your thinking partner</span>
+                            Nova<span>Assistant</span>
                           </div>
                           {message.content ? (
                             <Markdown content={message.content} />
@@ -799,7 +808,8 @@ export default function ChatApp() {
                 <textarea
                   ref={textarea}
                   aria-label="Message Nova"
-                  placeholder="Ask anything, or just start a thought…"
+                  placeholder="Write a message…"
+                  aria-describedby="composer-help"
                   value={draft}
                   maxLength={MAX_MESSAGE_LENGTH}
                   disabled={!state.loaded}
@@ -871,18 +881,57 @@ export default function ChatApp() {
                   </div>
                 </div>
               </form>
+              {!messages.length && (
+                <section
+                  className="welcome-starters"
+                  aria-label="Conversation starters"
+                >
+                  <div className="starters-heading">
+                    <span>A PLACE TO START</span>
+                    <span>Pick one, make it your own.</span>
+                  </div>
+                  <div className="suggestions">
+                    {suggestions.map(({ icon: Icon, ...item }) => (
+                      <button
+                        key={item.title}
+                        className="suggestion-card"
+                        onClick={() => {
+                          setDraft(item.prompt);
+                          textarea.current?.focus();
+                        }}
+                      >
+                        <span className="suggestion-icon">
+                          <Icon size={19} />
+                        </span>
+                        <span className="suggestion-copy">
+                          <strong>{item.title}</strong>
+                          <span className="suggestion-description">
+                            {item.description}
+                          </span>
+                        </span>
+                        <ArrowUpRight size={15} />
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
               <div className="composer-footnote">
-                <span>
-                  Nova can make mistakes. Give important details a second look.
+                <span id="composer-help">
+                  Enter to send · Shift + Enter for a new line
                 </span>
-                <span className="powered-note">
-                  MADE FOR YOUR MIND <NovaMark size={11} />
-                </span>
+                <span>Double-check important information.</span>
               </div>
             </div>
           </>
         )}
-      </div>
+      </main>
+      <p className="sr-only" role="status">
+        {streaming
+          ? "Nova is writing a response."
+          : lastAssistant?.status === "complete"
+            ? "Response ready."
+            : ""}
+      </p>
       {settings && (
         <Modal labelId="settings-title" onClose={() => setSettings(false)}>
           <div className="dialog-heading">
