@@ -2,6 +2,10 @@
 
 A thoughtful AI chatbot built with **TypeScript, Next.js, React, and Tailwind CSS**. Nova combines a ChatGPT-style conversation layout with a warm cream-and-sage visual identity, real OpenAI streaming, and a private personal workspace.
 
+![Nova desktop interface](docs/nova-desktop.png)
+
+[View the mobile interface](docs/nova-mobile.png).
+
 ## Start locally
 
 Requires Node.js 22 or newer (Node.js 24 recommended), npm, and an OpenAI API key with available API billing.
@@ -81,6 +85,7 @@ Dependencies are pinned and `package-lock.json` is committed for reproducible in
 npm run check             # ESLint, TypeScript, Vitest
 npm run format:check      # Prettier
 npm run build             # Production build
+node scripts/smoke-production.mjs # Verify the production password gate
 npx playwright install chromium
 npm run test:e2e          # Desktop and mobile Chromium tests
 npm audit
@@ -98,7 +103,7 @@ npm run build
 npm start
 ```
 
-Configure `OPENAI_API_KEY`, `OPENAI_MODEL`, and a strong `APP_PASSWORD` in your hosting provider's secret settings. Production intentionally refuses AI requests without password authentication. Serve production over HTTPS so secure session cookies work. Configure your proxy to preserve the request origin, disable response buffering, and allow streaming requests lasting up to 120 seconds. Session cookies expire after 24 hours; changing `APP_PASSWORD` invalidates existing sessions.
+Configure `OPENAI_API_KEY`, `OPENAI_MODEL`, and a strong `APP_PASSWORD` in your hosting provider's secret settings. Production intentionally refuses AI requests without password authentication. Serve production over HTTPS so secure session cookies work. Configure your proxy to preserve the original `Host` header, disable response buffering, and allow streaming requests lasting up to 120 seconds. Session cookies expire after 24 hours; changing `APP_PASSWORD` invalidates existing sessions.
 
 The built-in chat limit (20 requests per minute) and login limit (10 attempts per minute) are global, process-local budgets suited to a personal workspace. For multiple replicas or public access, add a shared rate limiter and platform-level traffic controls. OpenAI usage is charged to the configured key; set an appropriate project budget in your OpenAI account.
 
