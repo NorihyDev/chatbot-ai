@@ -46,7 +46,7 @@ export function getContext(messages: Message[]) {
   }
   const latest = messages.at(-1);
   if (!latest || latest.role !== "user") return [];
-  const result = [{ role: latest.role, content: latest.content }];
+  const result: { role: "user" | "assistant"; content: string }[] = [{ role: latest.role, content: latest.content }];
   let length = latest.content.length;
   for (const pair of pairs.reverse()) {
     const size = pair.reduce((n, m) => n + m.content.length, 0);
