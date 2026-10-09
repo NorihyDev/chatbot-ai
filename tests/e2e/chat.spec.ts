@@ -30,7 +30,7 @@ test("chat, follow-up context, persistence, export, rename, and delete", async (
   });
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: /Where shall/ }),
+    page.getByRole("heading", { name: /What are we/ }),
   ).toBeVisible();
   await page
     .getByRole("textbox", { name: "Message Nova" })
@@ -76,7 +76,7 @@ test("chat, follow-up context, persistence, export, rename, and delete", async (
   await page.getByRole("button", { name: "Delete My coding notes" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: /Where shall/ }),
+    page.getByRole("heading", { name: /What are we/ }),
   ).toBeVisible();
 });
 test("reports a provider error and retries the same user turn", async ({
@@ -107,7 +107,7 @@ test("themes persist, suggestions fill the composer, and layout fits", async ({
   isMobile,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: /Find the right words/ }).click();
+  await page.getByRole("button", { name: /Write a first draft/ }).click();
   await expect(page.getByRole("textbox", { name: "Message Nova" })).toHaveValue(
     /professional email/,
   );
